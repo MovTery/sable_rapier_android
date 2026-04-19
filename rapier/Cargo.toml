@@ -1,16 +1,41 @@
-[workspace]
-resolver = "3"
-members = ["marten", "rapier"]
+[package]
+name = "sable_rapier"
+version.workspace = true
+edition.workspace = true
 
-[workspace.package]
-edition = "2024"
-version = "0.1.0"
+[dependencies]
+marten.workspace = true
 
-[workspace.dependencies]
-marten = { path = "marten" }
+fern.workspace = true
+jni.workspace = true
+colored.workspace = true
+log.workspace = true
+humantime.workspace = true
 
-log = "0.4.22"
-jni = "0.21.1"
-colored = "2.1.0"
-fern = { version = "0.6.2", features = ["colored"] }
-humantime = "2.1.0"
+rapier3d = { git = "https://github.com/ryanhcode/rapier", rev = "a728067629d4f85cef99f388e12c9b0ee8cd1164", features = [
+    "simd-nightly",
+    "parallel",
+] }
+#rapier3d = { version = "0.26.1", features = [ "simd-stable" ] }
+
+rayon = "1.10.0"
+dashmap = "7.0.0-rc2"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "sable_rapier"
+path = "src/lib.rs"
+
+[profile.bench]
+debug = true
+
+[[bench]]
+name = "collision_benchmark"
+harness = false
+
+[dev-dependencies]
+criterion = "0.8.2"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
