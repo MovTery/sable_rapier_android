@@ -38,7 +38,7 @@ tasks.register('buildRustNatives') {
 }
 
 tasks.register('copyRustNatives', Copy) {
-    into("rapier/target/android")
+    into("target/android")
     
     def mapping = [
         'aarch64-linux-android': 'arm64-v8a',
@@ -48,7 +48,7 @@ tasks.register('copyRustNatives', Copy) {
     ]
     
     mapping.each { rustTarget, androidAbi ->
-        from("rapier/target/${rustTarget}/release/libsable_rapier.so") {
+        from("target/${rustTarget}/release/libsable_rapier.so") {
             into androidAbi
         }
     }

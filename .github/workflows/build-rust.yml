@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-natives
-          path: rapier/target/android
+          path: target/android
