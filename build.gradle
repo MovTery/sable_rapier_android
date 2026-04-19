@@ -1,0 +1,56 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+plugins {
+    id 'java'
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
+def sdkDir = localProperties.getProperty('sdk.dir')
+def ndkDir = localProperties.getProperty('ndk.dir') ?: "${sdkDir}/ndk/27.3.13750724"
+
+def rustProjectDir = file("rapier")
+def apiLevel = "21"
+
+tasks.register('compileRustAndroid', Exec) {
+    group = 'rust'
+    workingDir rustProjectDir
+    environment "ANDROID_NDK_HOME", ndkDir
+    
+    commandLine 'cargo', 'ndk',
+        '-t', 'arm64-v8a', 
+        '-t', 'armeabi-v7a', 
+        '-t', 'x86_64', 
+        '-t', 'x86', 
+        '--platform', apiLevel,
+        'build', '--release'
+}
+
+tasks.register('buildRustNatives') {
+    group = 'build'
+    description = 'Compiles all Rust natives using cargo-ndk.'
+    dependsOn compileRustAndroid
+    finalizedBy 'copyRustNatives'
+}
+
+tasks.register('copyRustNatives', Copy) {
+    into("rapier/target/android")
+    
+    def mapping = [
+        'aarch64-linux-android': 'arm64-v8a',
+        'armv7-linux-androideabi': 'armeabi-v7a',
+        'x86_64-linux-android': 'x86_64',
+        'i686-linux-android': 'x86'
+    ]
+    
+    mapping.each { rustTarget, androidAbi ->
+        from("rapier/target/${rustTarget}/release/libsable_rapier.so") {
+            into androidAbi
+        }
+    }
+}
+

@@ -1,0 +1,56 @@
+name: Build Rust Natives
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/build/cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Rust
+        run: |
+          cargo install cargo-ndk
+
+      - name: Setup Android NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: |
+          sdkmanager "ndk;27.3.13750724"
+          echo "ndk.dir=$ANDROID_HOME/ndk/27.3.13750724" >> local.properties
+
+      - name: Run Gradle Task
+        run: |
+          chmod +x gradlew
+          ./gradlew buildRustNatives
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-natives
+          path: rapier/target/android
