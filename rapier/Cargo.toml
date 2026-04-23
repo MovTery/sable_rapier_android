@@ -26,16 +26,9 @@ crate-type = ["cdylib", "staticlib"]
 name = "sable_rapier"
 path = "src/lib.rs"
 
-[profile.bench]
-debug = true
-
 [[bench]]
 name = "collision_benchmark"
 harness = false
 
 [dev-dependencies]
 criterion = "0.8.2"
-
-[profile.release]
-lto = "thin"
-codegen-units = 1
